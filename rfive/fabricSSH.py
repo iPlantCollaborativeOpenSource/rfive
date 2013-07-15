@@ -3,147 +3,137 @@ import os
 import sys
 from fabric.api import *
 
+
 class fabricSSHClient(object):
-  
-  """
-  Base class representing a connection over SSH/SCP to a remote node.
-  """
-  def __init__(self,hostname,port=22,username='root',password=None, key=None,timeout=None,ssh_config_path=None):
 
     """
-    @type hostname: C{str}
-    @keyword hostname: Hostname or IP address to connect to.
-
-    @type port: C{int}
-    @keyword port: TCP port to communicate on, defaults to 22.
-
-    @type username: C{str}
-    @keyword username: Username to use, defaults to root.
-
-    @type password: C{str}
-    @keyword password: Password to authenticate with.
-    
-    @type key: C{list}
-    @keyword key: Private SSH keys to authenticate with.
-
-    @type ssh_config_path: C{str}
-    @keyword ssh_config_path: SSH config file to authenticate with
+    Base class representing a connection over SSH/SCP to a remote node.
     """
+    def __init__(self, hostname, port=22, username='root', password=None,
+                 key=None, timeout=None, ssh_config_path=None):
+        """
+        @type hostname: C{str}
+        @keyword hostname: Hostname or IP address to connect to.
 
-    self.hostname = hostname
-    self.port = port
-    self.username = username
-    self.password = password
-    self.key = []
-    self.key.append(key)
-    self.timeout = timeout
-    self.ssh_config_path= ssh_config_path 
+        @type port: C{int}
+        @keyword port: TCP port to communicate on, defaults to 22.
 
-  def connect(self):
+        @type username: C{str}
+        @keyword username: Username to use, defaults to root.
 
-    """
-    Connect to the remote node over SSH.
-    """
-    env.user = self.username
-    env.host_string = self.hostname
-    env.port = self.port
-    
-    if self.ssh_config_path is not None:  
-      env.use_ssh_config = True
-      env.ssh_config_path = self.ssh_config_path
-    else:
-      env.key_filename = self.key
-    
+        @type password: C{str}
+        @keyword password: Password to authenticate with.
 
-  def put(self, path, contents=None, chmod = None, mode=None):
-    
-    """
-    Upload a file to the remote node
+        @type key: C{list}
+        @keyword key: Private SSH keys to authenticate with.
 
-    @type path: C{str}
-    @keyword path: File path on the remote node.
+        @type ssh_config_path: C{str}
+        @keyword ssh_config_path: SSH config file to authenticate with.
+        """
+        self.hostname = hostname
+        self.port = port
+        self.username = username
+        self.password = password
+        self.key = []
+        self.key.append(key)
+        self.timeout = timeout
+        self.ssh_config_path = ssh_config_path
 
-    @type contents: C{str}
-    @keyword contents: File Contents.
+    def connect(self):
+        """
+        Connect to the remote node over SSH.
+        """
+        env.user = self.username
+        env.host_string = self.hostname
+        env.port = self.port
 
-    @type chmod: C{bool}
-    @keyword chmod: chmod file to this after creation.
+        if self.ssh_config_path is not None:
+            env.use_ssh_config = True
+            env.ssh_config_path = self.ssh_config_path
+        else:
+            env.key_filename = self.key
 
-    @type mode: C{int}
-    @keyword mode: Mode in which the file settings will be created with. Example 0755, 0777 etc.
+    def put(self, path, contents=None, chmod=None, mode=None):
+        """
+        Upload a file to the remote node
 
-    @return: Full path to the location where a file has been saved.
-    @rtype: C{str}
-    """
+        @type path: C{str}
+        @keyword path: File path on the remote node.
 
-    successful = True
-    # make sure the directory is there! 
-    command = "mkdir -p " + path 
-    mkdir_return = self.run(command)
+        @type contents: C{str}
+        @keyword contents: File Contents.
 
-    if mkdir_return[2] != 0:
-      sucessful = False
-    
-    elif contents is not None:
+        @type chmod: C{bool}
+        @keyword chmod: chmod file to this after creation.
 
-      if chmod is not None:
-        put(contents, path, mode=mode)
-      else:
-        put(contents, path)
+        @type mode: C{int}
+        @keyword mode: Mode in which the file settings will be created
+                       with. Example 0755, 0777 etc.
 
-      return path
+        @return: Full path to the location where a file has been saved.
+        @rtype: C{str}
+        """
+        successful = True
+        # make sure the directory is there!
+        command = "mkdir -p " + path
+        mkdir_return = self.run(command)
 
-    else:
-      return False
+        if mkdir_return[2] != 0:
+            sucessful = False
 
-  def delete(self, path):
-    
-    """
-    Delete/Unlink a file on the remote node.
-    
-    @type path: C{str}
-    @keyword path: File path on the remote node.
+        elif contents is not None:
+            if chmod is not None:
+                put(contents, path, mode=mode)
+            else:
+                put(contents, path)
+            return path
+        else:
+            return False
 
-    @return: True if the file has been successfuly deleted, False otherwise
-    @rtype: C{bool}
-    """
+    def delete(self, path):
+        """
+        Delete/Unlink a file on the remote node.
 
-    successful = True
-    command = '[ -f ' + path + ' ] && echo "1" || echo "0"'
-    mkdir_return = self.run(command)
-    
-    if mkdir_return[0] == "0":
-      successful = False
-    else:
-      delete_value = self.run("rm -f " + path)
-      if delete_value[2] != 0:
-        successful = False
-      else:
-        return successful
+        @type path: C{str}
+        @keyword path: File path on the remote node.
 
-  def run(self, cmd, test=True):
-    
-    """
-    Run a command on a remote node.
+        @return: True if the file has been successfuly deleted, False otherwise
+        @rtype: C{bool}
+        """
+        successful = True
+        command = '[ -f ' + path + ' ] && echo "1" || echo "0"'
+        mkdir_return = self.run(command)
 
-    @type cmd: C{str}
-    @keyword cmd: Command to run.
+        if mkdir_return[0] == "0":
+            successful = False
+        else:
+            delete_value = self.run("rm -f " + path)
+            if delete_value[2] != 0:
+                successful = False
+            else:
+                return successful
 
-    @type warn_only: C{bool}
-    @keyword warn_only: If set to true, this will keep executing the command, if set to false, will halt the running of commands when an error occurs. Defaults to true.
+    def run(self, cmd, test=True):
+        """
+        Run a command on a remote node.
 
-    @return C{list} of [stdout, stderr, exit_status]
-    """
+        @type cmd: C{str}
+        @keyword cmd: Command to run.
 
-    with settings(warn_only=test):
-      results = run(cmd)
-      return_values = [results, results.stderr, results.return_code] 
-      return return_values
+        @type warn_only: C{bool}
+        @keyword warn_only: If set to true, this will keep executing the
+        command, if set to false, will halt the running of commands when
+        an error occurs. Defaults to true.
 
-  def close():
-    """
-    Close a fabric connection to a remote box
-    """
-    
-    fabric.network.disconnect_all()
+        @return C{list} of [stdout, stderr, exit_status]
+        """
+        with settings(warn_only=test):
+            results = run(cmd)
+            return_values = [results, results.stderr, results.return_code]
+            return return_values
 
+    def close():
+        """
+        Close a fabric connection to a remote box
+        """
+        fabric.network.disconnect_all()
