@@ -4,7 +4,7 @@ import sys
 from fabric.api import *
 
 
-class fabricSSHClient(object):
+class FabricSSHClient(object):
 
     """
     Base class representing a connection over SSH/SCP to a remote node.
@@ -52,8 +52,9 @@ class fabricSSHClient(object):
             env.ssh_config_path = self.ssh_config_path
         else:
             env.key_filename = self.key
+        return True
 
-    def put(self, path, contents=None, chmod=None, mode=None):
+    def put(self, path, contents=None, chmod=None, mode="w"):
         """
         Upload a file to the remote node
 
@@ -75,20 +76,24 @@ class fabricSSHClient(object):
         """
         successful = True
         # make sure the directory is there!
-        command = "mkdir -p " + path
+        command = "mkdir -p " + os.path.split(path)[0]
         mkdir_return = self.run(command)
 
         if mkdir_return[2] != 0:
             sucessful = False
-
-        elif contents is not None:
-            if chmod is not None:
-                put(contents, path, mode=mode)
-            else:
-                put(contents, path)
-            return path
+        
+        if mode == 'w':
+            redirect = '>'
+        elif mode == 'a':
+            redirect = '>>'
         else:
-            return False
+            raise ValueError('Invalid mode: ' + mode)
+
+        cmd = 'echo "%s" %s %s' % (contents, redirect, path)
+
+        command_return = self.run(cmd)
+
+        return path
 
     def delete(self, path):
         """
