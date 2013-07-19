@@ -137,8 +137,9 @@ class FabricSSHClient(object):
             return_values = [results, results.stderr, results.return_code]
             return return_values
 
-    def close():
+    def close(self):
         """
         Close a fabric connection to a remote box
         """
         fabric.network.disconnect_all()
+        return True
