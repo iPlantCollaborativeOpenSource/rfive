@@ -1,5 +1,6 @@
 import fabric
 import os
+from StringIO import StringIO
 import sys
 from fabric.api import *
 
@@ -64,35 +65,31 @@ class FabricSSHClient(object):
         @type contents: C{str}
         @keyword contents: File Contents.
 
-        @type chmod: C{bool}
-        @keyword chmod: chmod file to this after creation.
+        @type chmod: C{int}
+        @keyword chmod: Mode in which the file settings will be created
+                       with. Example 0755, 0777 etc.
 
         @type mode: C{int}
-        @keyword mode: Mode in which the file settings will be created
-                       with. Example 0755, 0777 etc.
+        @keyword mode: Mode to write to 
 
         @return: Full path to the location where a file has been saved.
         @rtype: C{str}
         """
-        successful = True
         # make sure the directory is there!
-        command = "mkdir -p " + os.path.split(path)[0]
-        mkdir_return = self.run(command)
-
-        if mkdir_return[2] != 0:
-            sucessful = False
-        
+        dir_ = os.path.split(path)[0]
+        if dir_:
+            command = "mkdir -p " + dir_
+            mkdir_return = self.run(command)
         if mode == 'w':
-            redirect = '>'
-        elif mode == 'a':
-            redirect = '>>'
+            put(StringIO(contents), path, mode=chmod)
+        elif mode == 'a' and contents:
+            contents_ = StringIO()
+            get(path, contents_)
+            with open(contents_, "a") as c:
+                c.write(contents) # append new contents
+            put(contents_, path, mode=chmod)
         else:
             raise ValueError('Invalid mode: ' + mode)
-
-        cmd = 'echo "%s" %s %s' % (contents, redirect, path)
-
-        command_return = self.run(cmd)
-
         return path
 
     def delete(self, path):
