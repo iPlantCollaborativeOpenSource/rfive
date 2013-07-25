@@ -1,9 +1,12 @@
-import fabric
 import os
 from StringIO import StringIO
 import sys
-from fabric.api import *
-
+from fabric.api import env as fenv
+from fabric.api import get as fget
+from fabric.api import put as fput
+from fabric.api import run as frun
+from fabric.api import settings as fsettings
+from fabric.network import disconnect_all
 
 class FabricSSHClient(object):
 
@@ -44,15 +47,15 @@ class FabricSSHClient(object):
         """
         Connect to the remote node over SSH.
         """
-        env.user = self.username
-        env.host_string = self.hostname
-        env.port = self.port
+        fenv.user = self.username
+        fenv.host_string = self.hostname
+        fenv.port = self.port
 
         if self.ssh_config_path is not None:
-            env.use_ssh_config = True
-            env.ssh_config_path = self.ssh_config_path
+            fenv.use_ssh_config = True
+            fenv.ssh_config_path = self.ssh_config_path
         else:
-            env.key_filename = self.key
+            fenv.key_filename = self.key
         return True
 
     def put(self, path, contents=None, chmod=None, mode="w"):
@@ -81,13 +84,14 @@ class FabricSSHClient(object):
             command = "mkdir -p " + dir_
             mkdir_return = self.run(command)
         if mode == 'w':
-            put(StringIO(contents), path, mode=chmod)
+            fput(StringIO(contents), path, mode=chmod)
         elif mode == 'a' and contents:
             contents_ = StringIO()
-            get(path, contents_)
-            with open(contents_, "a") as c:
-                c.write(contents) # append new contents
-            put(contents_, path, mode=chmod)
+            fget(path, contents_)
+            contents_.seek(0, 2)
+            contents_.write(contents) # append new contents
+            contents_.seek(0)
+            fput(contents_, path, mode=chmod)
         else:
             raise ValueError('Invalid mode: ' + mode)
         return path
@@ -129,8 +133,8 @@ class FabricSSHClient(object):
 
         @return C{list} of [stdout, stderr, exit_status]
         """
-        with settings(warn_only=test):
-            results = run(cmd)
+        with fsettings(warn_only=test):
+            results = frun(cmd)
             return_values = [results, results.stderr, results.return_code]
             return return_values
 
@@ -138,5 +142,5 @@ class FabricSSHClient(object):
         """
         Close a fabric connection to a remote box
         """
-        fabric.network.disconnect_all()
+        disconnect_all()
         return True
