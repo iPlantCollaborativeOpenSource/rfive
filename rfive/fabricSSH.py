@@ -80,12 +80,12 @@ class FabricSSHClient(object):
         """
         # make sure the directory is there!
         dir_ = os.path.split(path)[0]
-        if dir_:
+        if dir_ and dir_ != ".":
             command = "mkdir -p " + dir_
             mkdir_return = self.run(command)
-        if mode == 'w':
+        if mode == "w":
             fput(StringIO(contents), path, mode=chmod)
-        elif mode == 'a' and contents:
+        elif mode == "a" and contents:
             contents_ = StringIO()
             fget(path, contents_)
             contents_.seek(0, 2)
