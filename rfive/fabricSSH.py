@@ -43,13 +43,15 @@ class FabricSSHClient(object):
         self.timeout = timeout
         self.ssh_config_path = ssh_config_path
 
-    def connect(self):
+    def connect(self, ignore_hosts=False):
         """
         Connect to the remote node over SSH.
         """
         fenv.user = self.username
         fenv.host_string = self.hostname
         fenv.port = self.port
+        if ignore_hosts:
+            fenv.disable_known_hosts = True
 
         if self.ssh_config_path is not None:
             fenv.use_ssh_config = True
