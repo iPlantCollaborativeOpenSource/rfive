@@ -47,6 +47,7 @@ class FabricSSHClient(object):
         """
         Connect to the remote node over SSH.
         """
+        fenv.abort_exception = Exception
         fenv.user = self.username
         fenv.host_string = self.hostname
         fenv.port = self.port
