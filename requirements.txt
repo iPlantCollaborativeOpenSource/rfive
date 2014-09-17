@@ -1,2 +1,1 @@
-paramiko==1.12
-Fabric==1.8
+Fabric==1.10
