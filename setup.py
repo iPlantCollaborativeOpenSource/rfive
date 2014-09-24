@@ -25,8 +25,8 @@ with open('requirements.txt') as r:
 setuptools.setup(
     name='rfive',
     version=get_version('short'),
-    author='amercer1',
-    author_email='amercer1@email.arizona.edu',
+    author='iPlant Collaborative',
+    author_email='atmodevs@gmail.com',
     description="A unified interface into multiple cloud providers.",
     long_description=long_description,
     license="Apache License, Version 2.0",
